@@ -1,0 +1,506 @@
+openapi: 3.0.0
+info:
+  description: ""
+  title: Yet Another Disk Open API
+  version: "1.0"
+servers:
+- url: /
+paths:
+  /imports:
+    post:
+      description: |
+        Импортирует элементы файловой системы. Элементы импортированные повторно обновляют текущие.
+        Изменение типа элемента с папки на файл и с файла на папку не допускается.
+        Порядок элементов в запросе является произвольным.
+
+          - id каждого элемента является уникальным среди остальных элементов
+          - поле id не может быть равно null
+          - родителем элемента может быть только папка
+          - принадлежность к папке определяется полем parentId
+          - элементы могут не иметь родителя (при обновлении parentId на null элемент остается без родителя)
+          - поле url при импорте папки всегда должно быть равно null
+          - размер поля url при импорте файла всегда должен быть меньше либо равным 255
+          - поле size при импорте папки всегда должно быть равно null
+          - поле size для файлов всегда должно быть больше 0
+          - при обновлении элемента обновленными считаются **все** их параметры
+          - при обновлении параметров элемента обязательно обновляется поле **date** в соответствии с временем обновления
+          - в одном запросе не может быть двух элементов с одинаковым id
+          - дата обрабатывается согласно ISO 8601 (такой придерживается OpenAPI). Если дата не удовлетворяет данному формату, ответом будет код 400.
+
+        Гарантируется, что во входных данных нет циклических зависимостей и поле updateDate монотонно возрастает. Гарантируется, что при проверке передаваемое время кратно секундам.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemItemImportRequest'
+      responses:
+        "200":
+          description: Вставка или обновление прошли успешно.
+        "400":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "message": "Validation Failed"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Невалидная схема документа или входные данные не верны.
+      tags:
+      - Базовые задачи
+      x-content-type: application/json
+      x-accepts: application/json
+      x-tags:
+      - tag: Базовые задачи
+  /delete/{id}:
+    delete:
+      description: |
+        Удалить элемент по идентификатору. При удалении папки удаляются все дочерние элементы. Доступ к истории обновлений удаленного элемента невозможен.
+
+        **Обратите, пожалуйста, внимание на этот обработчик. При его некорректной работе тестирование может быть невозможно.**
+      parameters:
+      - description: Идентификатор
+        example: элемент_1_1
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: id
+          type: string
+        style: simple
+      - description: Дата и время запроса
+        example: 2022-05-28T21:12:01.516Z
+        explode: true
+        in: query
+        name: date
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      responses:
+        "200":
+          description: Удаление прошло успешно.
+        "400":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "message": "Validation Failed"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Невалидная схема документа или входные данные не верны.
+        "404":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 404,
+                      "message": "Item not found"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Элемент не найден.
+      tags:
+      - Базовые задачи
+      x-accepts: application/json
+      x-tags:
+      - tag: Базовые задачи
+  /nodes/{id}:
+    get:
+      description: |
+        Получить информацию об элементе по идентификатору. При получении информации о папке также предоставляется информация о её дочерних элементах.
+
+        - для пустой папки поле children равно пустому массиву, а для файла равно null
+        - размер папки - это суммарный размер всех её элементов. Если папка не содержит элементов, то размер равен 0. При обновлении размера элемента, суммарный размер папки, которая содержит этот элемент, тоже обновляется.
+      parameters:
+      - description: Идентификатор элемента
+        example: элемент_1_1
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemItem'
+          description: Информация об элементе.
+        "400":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "message": "Validation Failed"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Невалидная схема документа или входные данные не верны.
+        "404":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 404,
+                      "message": "Item not found"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Элемент не найден.
+      tags:
+      - Базовые задачи
+      x-accepts: application/json
+      x-tags:
+      - tag: Базовые задачи
+  /updates:
+    get:
+      description: |
+        Получение списка **файлов**, которые были обновлены за последние 24 часа включительно [date - 24h, date] от времени переданном в запросе.
+      parameters:
+      - description: "Дата и время запроса. Дата должна обрабатываться согласно ISO\
+          \ 8601 (такой придерживается OpenAPI). Если дата не удовлетворяет данном\
+          у формату, необходимо отвечать 400"
+        example: 2022-05-28T21:12:01.000Z
+        explode: true
+        in: query
+        name: date
+        required: true
+        schema:
+          format: date-time
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemItemHistoryResponse'
+          description: "Список элементов, которые были обновлены."
+        "400":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "message": "Validation Failed"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Невалидная схема документа или входные данные не верны.
+      tags:
+      - Дополнительные задачи
+      x-accepts: application/json
+      x-tags:
+      - tag: Дополнительные задачи
+  /node/{id}/history:
+    get:
+      description: |
+        Получение истории обновлений по элементу за заданный полуинтервал [from, to). История по удаленным элементам недоступна.
+
+        - размер папки - это суммарный размер всех её элементов
+        - можно получить статистику за всё время.
+      parameters:
+      - description: id элемента для которого будет отображаться история
+        example: элемент_1_1
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: id
+          type: string
+        style: simple
+      - description: "Дата и время начала интервала, для которого считается истори\
+          я. Дата должна обрабатываться согласно ISO 8601 (такой придерживается OpenAPI).\
+          \ Если дата не удовлетворяет данному формату, необходимо отвечать 400."
+        example: 2022-05-28T21:12:01.000Z
+        explode: true
+        in: query
+        name: dateStart
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: "Дата и время конца интервала, для которого считается история\
+          . Дата должна обрабатываться согласно ISO 8601 (такой придерживается OpenAPI).\
+          \ Если дата не удовлетворяет данному формату, необходимо отвечать 400."
+        example: 2022-05-28T21:12:01.000Z
+        explode: true
+        in: query
+        name: dateEnd
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemItemHistoryResponse'
+          description: История по элементу.
+        "400":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "message": "Validation Failed"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Некорректный формат запроса или некорректные даты интервала.
+        "404":
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 404,
+                      "message": "Item not found"
+                    }
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Элемент не найден.
+      tags:
+      - Дополнительные задачи
+      x-accepts: application/json
+      x-tags:
+      - tag: Дополнительные задачи
+components:
+  schemas:
+    SystemItemType:
+      description: Тип элемента - папка или файл
+      enum:
+      - FILE
+      - FOLDER
+      type: string
+    SystemItem:
+      example:
+        id: элемент_1_2
+        url: null
+        type: FOLDER
+        parentId: null
+        date: 2022-05-28T21:12:01.000Z
+        size: 12
+        children:
+        - url: /file/url1
+          id: элемент_1_3
+          size: 4
+          date: 2022-05-28T21:12:01.000Z
+          type: FILE
+          parentId: элемент_1_2
+        - type: FOLDER
+          url: null
+          id: элемент_1_1
+          date: 2022-05-26T21:12:01.000Z
+          parentId: элемент_1_2
+          size: 8
+          children:
+          - url: /file/url2
+            id: элемент_1_4
+            parentId: элемент_1_1
+            date: 2022-05-26T21:12:01.000Z
+            size: 8
+            type: FILE
+      properties:
+        id:
+          description: Уникальный идентфикатор
+          example: элемент_1_1
+          nullable: false
+          type: string
+        url:
+          description: Ссылка на файл. Для папок поле равнно null.
+          nullable: true
+          type: string
+        date:
+          description: Время последнего обновления элемента.
+          example: 2022-05-28T21:12:01Z
+          format: date-time
+          nullable: false
+          type: string
+        parentId:
+          description: id родительской папки
+          example: элемент_1_1
+          nullable: true
+          type: string
+        type:
+          $ref: '#/components/schemas/SystemItemType'
+        size:
+          description: "Целое число, для папки - это суммарный размер всех элемето\
+            в."
+          format: int64
+          nullable: true
+          type: integer
+        children:
+          description: Список всех дочерних элементов. Для файлов поле равно null.
+          items:
+            $ref: '#/components/schemas/SystemItem'
+          type: array
+      required:
+      - date
+      - id
+      - type
+      type: object
+    SystemItemImport:
+      example:
+        id: элемент_1_4
+        url: /file/url1
+        parentId: элемент_1_1
+        size: 234
+        type: FILE
+      properties:
+        id:
+          description: Уникальный идентфикатор
+          example: элемент_1_1
+          nullable: false
+          type: string
+        url:
+          description: Ссылка на файл. Для папок поле равнно null.
+          nullable: true
+          type: string
+        parentId:
+          description: id родительской папки
+          example: элемент_1_1
+          nullable: true
+          type: string
+        type:
+          $ref: '#/components/schemas/SystemItemType'
+        size:
+          description: "Целое число, для папок поле должно содержать null."
+          format: int64
+          nullable: true
+          type: integer
+      required:
+      - id
+      - type
+      type: object
+    SystemItemImportRequest:
+      example:
+        updateDate: 2022-05-28T21:12:01Z
+        items:
+        - id: элемент_1_4
+          url: /file/url1
+          parentId: элемент_1_1
+          size: 234
+          type: FILE
+        - id: элемент_1_4
+          url: /file/url1
+          parentId: элемент_1_1
+          size: 234
+          type: FILE
+      properties:
+        items:
+          description: Импортируемые элементы
+          items:
+            $ref: '#/components/schemas/SystemItemImport'
+          nullable: false
+          type: array
+        updateDate:
+          description: Время обновления добавляемых элементов.
+          example: 2022-05-28T21:12:01Z
+          format: date-time
+          nullable: false
+          type: string
+      type: object
+    SystemItemHistoryUnit:
+      example:
+        id: элемент_1_4
+        url: /file/url1
+        date: 2022-05-28T21:12:01.000Z
+        parentId: элемент_1_1
+        size: 234
+        type: FILE
+      properties:
+        id:
+          description: Уникальный идентфикатор
+          example: элемент_1_1
+          nullable: false
+          type: string
+        url:
+          description: Ссылка на файл. Для папок поле равнно null.
+          nullable: true
+          type: string
+        parentId:
+          description: id родительской папки
+          example: элемент_1_1
+          nullable: true
+          type: string
+        type:
+          $ref: '#/components/schemas/SystemItemType'
+        size:
+          description: "Целое число, для папки - это суммарный размер всех её элем\
+            ентов."
+          format: int64
+          nullable: true
+          type: integer
+        date:
+          description: Время последнего обновления элемента.
+          format: date-time
+          nullable: false
+          type: string
+      required:
+      - date
+      - id
+      - type
+      type: object
+    SystemItemHistoryResponse:
+      example:
+        items:
+        - id: элемент_1_4
+          url: /file/url1
+          date: 2022-05-28T21:12:01.000Z
+          parentId: элемент_1_1
+          size: 234
+          type: FILE
+        - id: элемент_1_4
+          url: /file/url1
+          date: 2022-05-28T21:12:01.000Z
+          parentId: элемент_1_1
+          size: 234
+          type: FILE
+      properties:
+        items:
+          description: История в произвольном порядке.
+          items:
+            $ref: '#/components/schemas/SystemItemHistoryUnit'
+          type: array
+      type: object
+    Error:
+      properties:
+        code:
+          nullable: false
+          type: integer
+        message:
+          nullable: false
+          type: string
+      required:
+      - code
+      - message

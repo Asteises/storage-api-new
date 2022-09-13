@@ -1,0 +1,81 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.3'
+    id 'io.spring.dependency-management' version '1.0.13.RELEASE'
+    id "org.openapi.generator" version "6.0.1"
+    id 'java'
+}
+
+ext {
+    mapstruct = "1.4.2.Final"
+}
+
+group = 'ru.asteises'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+defaultTasks 'clean', 'build'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.3'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.2'
+
+    implementation 'io.swagger.core.v3:swagger-core:2.2.2'
+    implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+    implementation 'io.springfox:springfox-swagger2:2.9.2'
+
+    implementation "org.mapstruct:mapstruct:$mapstruct"
+    annotationProcessor "org.mapstruct:mapstruct-processor:$mapstruct"
+
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.liquibase:liquibase-core'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+var spec = "$rootDir/src/main/resources/openapi/openapi.yaml".toString()
+var generatedSourcesDir = "$rootDir".toString()
+
+task openApiGenerateTask(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask){
+    generatorName.set("spring")
+
+    inputSpec.set(spec)
+    outputDir.set(generatedSourcesDir)
+    apiPackage.set("ru.asteises.storageapi.controller")
+    invokerPackage.set("ru.asteises.storageapi.invoker")
+    modelPackage.set("ru.asteises.storageapi.model")
+
+    configOptions = ["dateLibrary": "java11"]
+}
+
+sourceSets{
+    main{
+        java{
+            srcDir("${buildDir}/src/main/java")
+        }
+    }
+}
+
+compileJava{
+    source += sourceSets.main.java
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
