@@ -9,4 +9,6 @@ import java.util.UUID;
 //TODO Реализовать эндпоит ImportsApiController
 @Repository
 public interface ItemRepository extends JpaRepository<Item, UUID> {
+
+    Item save(Item item);
 }
