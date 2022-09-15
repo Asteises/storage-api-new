@@ -338,9 +338,10 @@ components:
       properties:
         id:
           type: string
+          format: UUID
           nullable: false
           description: Уникальный идентфикатор
-          example: "элемент_1_1"
+          example: "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
         url:
           description: Ссылка на файл. Для папок поле равнно null.
           type: string

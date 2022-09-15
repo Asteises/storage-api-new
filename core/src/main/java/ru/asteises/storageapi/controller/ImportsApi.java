@@ -39,7 +39,7 @@ public interface ImportsApi {
         return Optional.empty();
     }
 
-    ResponseEntity<Void> importItems(SystemItemImportRequest systemItemImportRequest);
+    ResponseEntity<Void> importItems(List<SystemItemImportRequest> systemItemImportRequest);
 
     /**
      * POST /imports
@@ -66,7 +66,7 @@ public interface ImportsApi {
         consumes = { "application/json" }
     )
     default ResponseEntity<Void> importsPost(
-        @Parameter(name = "SystemItemImportRequest", description = "") @Valid @RequestBody(required = false) SystemItemImportRequest systemItemImportRequest
+        @Parameter(name = "SystemItemImportRequest", description = "") @Valid @RequestBody(required = false) List<SystemItemImportRequest> systemItemImportRequest
     ) {
         return importItems(systemItemImportRequest);
     }

@@ -8,6 +8,7 @@ import org.hibernate.Hibernate;
 import ru.asteises.storageapi.model.SystemItemType;
 
 import javax.persistence.*;
+import java.sql.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -28,10 +29,13 @@ public class Item {
     private String url;
     @Column(name = "PARENT_ID")
     private UUID parentId;
+    @Column(name = "DATE")
+    private Date date;
     @Column(name = "TYPE")
+    @Enumerated(EnumType.STRING) //Нужно явно указать что используется тип ENUM
     private SystemItemType type;
     @Column(name = "SIZE")
-    private long size;
+    private Long size;
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "PARENT_ID", referencedColumnName = "ID", nullable = true)

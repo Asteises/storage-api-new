@@ -2,6 +2,8 @@ package ru.asteises.storageapi.model;
 
 import java.net.URI;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.ArrayList;
@@ -31,7 +33,7 @@ public class SystemItemImportRequest {
   private List<SystemItemImport> items = null;
 
   @JsonProperty("updateDate")
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
   private Date updateDate;
 
   public SystemItemImportRequest items(List<SystemItemImport> items) {

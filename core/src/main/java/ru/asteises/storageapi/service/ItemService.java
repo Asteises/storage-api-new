@@ -1,13 +1,14 @@
 package ru.asteises.storageapi.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import ru.asteises.storageapi.entity.Item;
 import ru.asteises.storageapi.mapper.ItemMapper;
 import ru.asteises.storageapi.model.SystemItemImport;
 import ru.asteises.storageapi.model.SystemItemImportRequest;
 import ru.asteises.storageapi.repository.ItemRepository;
 
+import java.sql.Date;
 import java.util.List;
 
 @Service
@@ -16,10 +17,15 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
 
-    public void  ImportItems(SystemItemImportRequest systemItemImportRequest) {
-        List<SystemItemImport> systemItemImport = systemItemImportRequest.getItems();
-        for (SystemItemImport itemDto : systemItemImport) {
-            itemRepository.save(ItemMapper.INSTANCE.toItem(itemDto));
+    public void importItems(List<SystemItemImportRequest> systemItemImportRequest) {
+
+        //TODO Сделать через stream и попробовать сделать get запрос на получение Item
+        for (SystemItemImportRequest s : systemItemImportRequest) {
+            List<SystemItemImport> systemItemImports = s.getItems();
+            for (SystemItemImport systemItemImport : systemItemImports) {
+                Item item = ItemMapper.INSTANCE.toItem(systemItemImport, new Date(s.getUpdateDate().getTime()));
+                itemRepository.save(item);
+            }
         }
     }
 }

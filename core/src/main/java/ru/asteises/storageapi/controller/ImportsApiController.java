@@ -1,17 +1,17 @@
 package ru.asteises.storageapi.controller;
 
-import ru.asteises.storageapi.model.SystemItemImportRequest;
-
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.NativeWebRequest;
+import ru.asteises.storageapi.model.SystemItemImportRequest;
 import ru.asteises.storageapi.service.ItemService;
 
-import java.util.Optional;
 import javax.annotation.Generated;
+import java.util.List;
+import java.util.Optional;
 
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2022-09-13T18:54:19.973988900+03:00[Europe/Moscow]")
 @Controller
@@ -33,9 +33,9 @@ public class ImportsApiController implements ImportsApi {
     }
 
     @Override
-    public ResponseEntity<Void> importItems(SystemItemImportRequest systemItemImportRequest) {
-        itemService.ImportItems(systemItemImportRequest);
-        return (ResponseEntity<Void>) ResponseEntity.ok();
+    public ResponseEntity<Void> importItems(List<SystemItemImportRequest> systemItemImportRequest) {
+        itemService.importItems(systemItemImportRequest);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }
