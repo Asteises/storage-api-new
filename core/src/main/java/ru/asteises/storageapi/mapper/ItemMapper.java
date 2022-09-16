@@ -7,6 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 import ru.asteises.storageapi.entity.Item;
+import ru.asteises.storageapi.model.SystemItem;
 import ru.asteises.storageapi.model.SystemItemImport;
 import ru.asteises.storageapi.model.SystemItemImportRequest;
 import ru.asteises.storageapi.service.ItemService;
@@ -29,8 +30,9 @@ public abstract class ItemMapper {
 
 
     @Mapping(target = "date", source = "date")
-//    @Mapping(target = "items", expression = "java()")
     public abstract Item toItem(SystemItemImport systemItemImport, Date date);
+
+    public abstract SystemItem toSystemItem(Item item);
 
 //    @InheritInverseConfiguration
 //    @Mapping(target = "id", source = "item.id")
