@@ -28,6 +28,7 @@ import javax.validation.constraints.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import javax.annotation.Generated;
 
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2022-09-13T18:54:19.973988900+03:00[Europe/Moscow]")
@@ -38,6 +39,8 @@ public interface NodesApi {
     default Optional<NativeWebRequest> getRequest() {
         return Optional.empty();
     }
+
+    ResponseEntity<SystemItem> getItemById(UUID itemId);
 
     /**
      * GET /nodes/{id}
@@ -69,18 +72,9 @@ public interface NodesApi {
         produces = { "application/json" }
     )
     default ResponseEntity<SystemItem> nodesIdGet(
-        @Parameter(name = "id", description = "Идентификатор элемента", required = true) @PathVariable("id") String id
+        @Parameter(name = "id", description = "Идентификатор элемента", required = true) @PathVariable("id") UUID id
     ) {
-        getRequest().ifPresent(request -> {
-            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
-                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"id\" : \"элемент_1_2\", \"url\" : null, \"type\" : \"FOLDER\", \"parentId\" : null, \"date\" : \"2022-05-28T21:12:01.000Z\", \"size\" : 12, \"children\" : [ { \"url\" : \"/file/url1\", \"id\" : \"элемент_1_3\", \"size\" : 4, \"date\" : \"2022-05-28T21:12:01.000Z\", \"type\" : \"FILE\", \"parentId\" : \"элемент_1_2\" }, { \"type\" : \"FOLDER\", \"url\" : null, \"id\" : \"элемент_1_1\", \"date\" : \"2022-05-26T21:12:01.000Z\", \"parentId\" : \"элемент_1_2\", \"size\" : 8, \"children\" : [ { \"url\" : \"/file/url2\", \"id\" : \"элемент_1_4\", \"parentId\" : \"элемент_1_1\", \"date\" : \"2022-05-26T21:12:01.000Z\", \"size\" : 8, \"type\" : \"FILE\" } ] } ] }";
-                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
-                    break;
-                }
-            }
-        });
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        return getItemById(id);
 
     }
 

@@ -5,16 +5,20 @@ import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 import ru.asteises.storageapi.entity.Item;
 import ru.asteises.storageapi.model.SystemItem;
 import ru.asteises.storageapi.model.SystemItemImport;
 import ru.asteises.storageapi.model.SystemItemImportRequest;
+import ru.asteises.storageapi.model.SystemItemType;
 import ru.asteises.storageapi.service.ItemService;
 
 import java.sql.Date;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -32,7 +36,26 @@ public abstract class ItemMapper {
     @Mapping(target = "date", source = "date")
     public abstract Item toItem(SystemItemImport systemItemImport, Date date);
 
+    @Mapping(target = "children", source = "item", qualifiedByName = "children")
     public abstract SystemItem toSystemItem(Item item);
+
+    //TODO Доделать маппер и упростить его используя stream
+    @Named("children")
+    public List<SystemItem> children(Item item) {
+        List<SystemItem> systemItems = new ArrayList<>();
+        if(!item.getItems().isEmpty()) {
+            for (Item i: item.getItems()) {
+                if (i.getType() == SystemItemType.FILE) {
+                    systemItems.add(this.toSystemItem(i));
+                } else {
+                    systemItems.add(this.toSystemItem(i));
+                }
+            }
+        } else {
+            return null;
+        }
+        return systemItems;
+    }
 
 //    @InheritInverseConfiguration
 //    @Mapping(target = "id", source = "item.id")

@@ -38,6 +38,7 @@ public class Item {
     private Long size;
 
     @OneToMany(fetch = FetchType.EAGER)
+    // Выбираем те таблицы в которых PARENT_ID = ID
     @JoinColumn(name = "PARENT_ID", referencedColumnName = "ID", nullable = true)
     private List<Item> items;
 

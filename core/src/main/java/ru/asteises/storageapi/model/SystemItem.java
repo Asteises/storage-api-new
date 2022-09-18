@@ -29,29 +29,29 @@ import javax.annotation.Generated;
 public class SystemItem {
 
   @JsonProperty("id")
-  private String id;
+  private UUID id;
 
   @JsonProperty("url")
-  private JsonNullable<String> url = JsonNullable.undefined();
+  private String url;
 
   @JsonProperty("date")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private Date date;
 
   @JsonProperty("parentId")
-  private JsonNullable<String> parentId = JsonNullable.undefined();
+  private UUID parentId;
 
   @JsonProperty("type")
   private SystemItemType type;
 
   @JsonProperty("size")
-  private JsonNullable<Long> size = JsonNullable.undefined();
+  private Long size;
 
   @JsonProperty("children")
   @Valid
   private List<SystemItem> children = null;
 
-  public SystemItem id(String id) {
+  public SystemItem id(UUID id) {
     this.id = id;
     return this;
   }
@@ -62,16 +62,16 @@ public class SystemItem {
   */
   @NotNull 
   @Schema(name = "id", example = "элемент_1_1", description = "Уникальный идентфикатор", required = true)
-  public String getId() {
+  public UUID getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(UUID id) {
     this.id = id;
   }
 
   public SystemItem url(String url) {
-    this.url = JsonNullable.of(url);
+    this.url = url;
     return this;
   }
 
@@ -81,11 +81,11 @@ public class SystemItem {
   */
   
   @Schema(name = "url", description = "Ссылка на файл. Для папок поле равнно null.", required = false)
-  public JsonNullable<String> getUrl() {
+  public String getUrl() {
     return url;
   }
 
-  public void setUrl(JsonNullable<String> url) {
+  public void setUrl(String url) {
     this.url = url;
   }
 
@@ -108,8 +108,8 @@ public class SystemItem {
     this.date = date;
   }
 
-  public SystemItem parentId(String parentId) {
-    this.parentId = JsonNullable.of(parentId);
+  public SystemItem parentId(UUID parentId) {
+    this.parentId = parentId;
     return this;
   }
 
@@ -119,11 +119,11 @@ public class SystemItem {
   */
   
   @Schema(name = "parentId", example = "элемент_1_1", description = "id родительской папки", required = false)
-  public JsonNullable<String> getParentId() {
+  public UUID getParentId() {
     return parentId;
   }
 
-  public void setParentId(JsonNullable<String> parentId) {
+  public void setParentId(UUID parentId) {
     this.parentId = parentId;
   }
 
@@ -147,7 +147,7 @@ public class SystemItem {
   }
 
   public SystemItem size(Long size) {
-    this.size = JsonNullable.of(size);
+    this.size = size;
     return this;
   }
 
@@ -157,11 +157,11 @@ public class SystemItem {
   */
   
   @Schema(name = "size", description = "Целое число, для папки - это суммарный размер всех элеметов.", required = false)
-  public JsonNullable<Long> getSize() {
+  public Long getSize() {
     return size;
   }
 
-  public void setSize(JsonNullable<Long> size) {
+  public void setSize(Long size) {
     this.size = size;
   }
 
