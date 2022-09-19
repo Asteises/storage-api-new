@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Преобразуем SystemItemImport в Item и обратно
@@ -36,25 +37,39 @@ public abstract class ItemMapper {
     @Mapping(target = "date", source = "date")
     public abstract Item toItem(SystemItemImport systemItemImport, Date date);
 
-    @Mapping(target = "children", source = "item", qualifiedByName = "children")
+    @Mapping(target = "children", source = "item", qualifiedByName = "childrenMap")
     public abstract SystemItem toSystemItem(Item item);
 
     //TODO Доделать маппер и упростить его используя stream
     @Named("children")
     public List<SystemItem> children(Item item) {
         List<SystemItem> systemItems = new ArrayList<>();
-        if(!item.getItems().isEmpty()) {
-            for (Item i: item.getItems()) {
-                if (i.getType() == SystemItemType.FILE) {
-                    systemItems.add(this.toSystemItem(i));
-                } else {
-                    systemItems.add(this.toSystemItem(i));
-                }
-            }
-        } else {
-            return null;
-        }
+        item.getItems().stream()
+                .filter(i -> i.getType().equals(SystemItemType.FILE) && !i.getItems().isEmpty())
+                .map(ItemMapper.INSTANCE::toSystemItem).collect(Collectors.toList());
         return systemItems;
+
+//        if (item.getItems().isEmpty() && item.getType().equals(SystemItemType.FILE)) {
+//            return null;
+//        } else {
+//            for (Item i : item.getItems()) {
+//                systemItems.add(this.toSystemItem(i));
+//            }
+//            return systemItems;
+//        }
+
+//        if(!item.getItems().isEmpty()) {
+//            for (Item i: item.getItems()) {
+//                if (i.getType() == SystemItemType.FILE) {
+//                    systemItems.add(this.toSystemItem(i));
+//                } else {
+//                    systemItems.add(this.toSystemItem(i));
+//                }
+//            }
+//        } else {
+//            return null;
+//        }
+//        return systemItems;
     }
 
 //    @InheritInverseConfiguration
