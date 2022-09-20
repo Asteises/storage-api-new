@@ -5,7 +5,8 @@
  */
 package ru.asteises.storageapi.controller;
 
-import java.util.Date;
+import java.util.*;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import ru.asteises.storageapi.model.Error;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,9 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Generated;
 
 @Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2022-09-13T18:54:19.973988900+03:00[Europe/Moscow]")
@@ -39,6 +37,8 @@ public interface DeleteApi {
     default Optional<NativeWebRequest> getRequest() {
         return Optional.empty();
     }
+
+    ResponseEntity<Void> deleteItem(UUID id);
 
     /**
      * DELETE /delete/{id}
@@ -69,10 +69,10 @@ public interface DeleteApi {
         produces = { "application/json" }
     )
     default ResponseEntity<Void> deleteIdDelete(
-        @Parameter(name = "id", description = "Идентификатор", required = true) @PathVariable("id") String id,
+        @Parameter(name = "id", description = "Идентификатор", required = true) @PathVariable("id") UUID id,
         @NotNull @Parameter(name = "date", description = "Дата и время запроса", required = true) @Valid @RequestParam(value = "date", required = true) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Date date
     ) {
-        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        return deleteItem(id);
 
     }
 

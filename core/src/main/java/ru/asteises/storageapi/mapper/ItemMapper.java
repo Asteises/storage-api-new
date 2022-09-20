@@ -1,7 +1,5 @@
 package ru.asteises.storageapi.mapper;
 
-import org.mapstruct.Context;
-import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -10,12 +8,10 @@ import org.mapstruct.factory.Mappers;
 import ru.asteises.storageapi.entity.Item;
 import ru.asteises.storageapi.model.SystemItem;
 import ru.asteises.storageapi.model.SystemItemImport;
-import ru.asteises.storageapi.model.SystemItemImportRequest;
 import ru.asteises.storageapi.model.SystemItemType;
 import ru.asteises.storageapi.service.ItemService;
 
 import java.sql.Date;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,48 +31,37 @@ public abstract class ItemMapper {
 
 
     @Mapping(target = "date", source = "date")
+
     public abstract Item toItem(SystemItemImport systemItemImport, Date date);
 
-    @Mapping(target = "children", source = "item", qualifiedByName = "childrenMap")
+    @Mapping(target = "children", source = "item", qualifiedByName = "childrenMapping")
+    @Mapping(target = "size", source = "item", qualifiedByName = "sizeCount")
     public abstract SystemItem toSystemItem(Item item);
 
-    //TODO Доделать маппер и упростить его используя stream
-    @Named("children")
-    public List<SystemItem> children(Item item) {
-        List<SystemItem> systemItems = new ArrayList<>();
-        item.getItems().stream()
-                .filter(i -> i.getType().equals(SystemItemType.FILE) && !i.getItems().isEmpty())
-                .map(ItemMapper.INSTANCE::toSystemItem).collect(Collectors.toList());
-        return systemItems;
-
-//        if (item.getItems().isEmpty() && item.getType().equals(SystemItemType.FILE)) {
-//            return null;
-//        } else {
-//            for (Item i : item.getItems()) {
-//                systemItems.add(this.toSystemItem(i));
-//            }
-//            return systemItems;
-//        }
-
-//        if(!item.getItems().isEmpty()) {
-//            for (Item i: item.getItems()) {
-//                if (i.getType() == SystemItemType.FILE) {
-//                    systemItems.add(this.toSystemItem(i));
-//                } else {
-//                    systemItems.add(this.toSystemItem(i));
-//                }
-//            }
-//        } else {
-//            return null;
-//        }
-//        return systemItems;
+    @Named("childrenMapping")
+    public List<SystemItem> childrenMapping(Item item) {
+        if (SystemItemType.FILE.equals(item.getType())) {
+            return null;
+        }
+        if (!item.getItems().isEmpty()) {
+            return item.getItems().stream()
+                    .map(this::toSystemItem)
+                    .collect(Collectors.toList());
+        }
+        return new ArrayList<>();
     }
 
-//    @InheritInverseConfiguration
-//    @Mapping(target = "id", source = "item.id")
-//    @Mapping(target = "url", source = "item.url")
-//    @Mapping(target = "parentId", source = "item.parentId")
-//    @Mapping(target = "type", source = "item.type")
-//    @Mapping(target = "size", source = "item.size")
-//    public abstract SystemItemImport toSystemItemImport(Item item);
+    @Named("sizeCount")
+    public long sizeCount(Item item) {
+        if (SystemItemType.FILE.equals(item.getType())) {
+            return item.getSize();
+        }
+        long size = item.getItems().size();
+        for (Item i : item.getItems()) {
+            if (SystemItemType.FOLDER.equals(i.getType())) {
+                size += sizeCount(i);
+            }
+        }
+        return size;
+    }
 }

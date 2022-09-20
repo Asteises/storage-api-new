@@ -3,6 +3,7 @@ package ru.asteises.storageapi.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.asteises.storageapi.entity.Item;
+import ru.asteises.storageapi.exception.ItemNotFound;
 import ru.asteises.storageapi.mapper.ItemMapper;
 import ru.asteises.storageapi.model.SystemItem;
 import ru.asteises.storageapi.model.SystemItemImportRequest;
@@ -27,9 +28,20 @@ public class ItemService {
         }
     }
 
-    public SystemItem exportSystemItems(UUID itemId) {
+    public SystemItem exportSystemItems(UUID itemId) throws ItemNotFound {
         Optional<Item> optionalItem = itemRepository.findById(itemId);
-        return optionalItem.map(ItemMapper.INSTANCE::toSystemItem).orElse(null);
+        if (optionalItem.isPresent()) {
+            return optionalItem.map(ItemMapper.INSTANCE::toSystemItem).orElse(null);
+        }
+        throw new ItemNotFound("Item not found");
+    }
+
+    public void deleteItem(UUID itemId) throws ItemNotFound {
+        if (itemRepository.findById(itemId).isPresent()) {
+            itemRepository.deleteById(itemId);
+            return;
+        }
+        throw new ItemNotFound("Item not found");
     }
 }
 

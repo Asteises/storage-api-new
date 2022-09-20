@@ -37,7 +37,7 @@ public class Item {
     @Column(name = "SIZE")
     private Long size;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     // Выбираем те таблицы в которых PARENT_ID = ID
     @JoinColumn(name = "PARENT_ID", referencedColumnName = "ID", nullable = true)
     private List<Item> items;
